@@ -1,0 +1,379 @@
+### **Step 1 Implement Reverse Complement Function**
+
+def ReverseComplement(Text):
+  complement = []                        # This line initializes an empty listto store the complementary nucleotides for each base in the input DNA string
+  for i in Text:
+    if i == "A":                         # this line checks if the current character (i) is equal to "A" (Adenine).
+        complement.append("T")           # appends "T" (Thymine) to the complement list. This is because "T" is the complementary base for "A" in DNA
+    elif i == "T":
+        complement.append("A")           # if i is "T", it appends "A" to the list.
+    elif i == "G":
+        complement.append("C")           # if i is "G", it appends "C" to the list.
+    elif i == "C":
+        complement.append("G")           # if i is "C", it appends "G" to the list.
+    else:
+        print("Not ACTG")                # simply prints a message indicating that the input character is not a valid DNA base
+
+  reverse_complement = list(reversed(complement))       # use this function to reverse the order of elements in the complement list
+
+  return "".join(reverse_complement)                    # This creates the final reverse complement of the input DNA string
+
+
+**1.1 What is the Reverse Complement for this Sample Input :**
+
+ReverseComplement("ACACAC")
+
+**1.2 What is the Reverse Complement for this Sample Input :**
+
+ReverseComplement("AAAACCCGGT")
+
+### **Step 2 Implement Hamming Distance Function:**
+
+def HammingDistance(string1, string2):                 # define a function that takes 2 strings as input
+    if len(string1) != len(string2):                   # check if the 2 strings have the same length
+        print("Strings must be the same length!")      # if it's not, just print this message
+    number_mismatches = 0                              # used to count the number of
+    string_length = len(string1)                       # stores the length of one string (since they're equal length)
+    for i in range(string_length):                     # define a loop that examines each corresponding character in both strings
+        if string1[i] != string2[i]:                   # checks if the current character in both strings are different
+            number_mismatches += 1                     # if they are, increment the number_mismatches count by 1
+
+    return number_mismatches
+
+**2.1 What is the Hamming distance for this Sample Input :**
+
+St1 = "GATAGCAGCTTCTGAACTGGTTACCTGCCGTGAGTAAATTAAAATTTTATTGACTTAGGTCACTAAATACT"
+St2 = "AATAGCAGCTTCTCAACTGGTTACCTCGTATGAGTAAATTAGGTCATTATTGACTCAGGTCACTAACGTCT"
+HammingDistance(St1, St2)
+
+**2.2 What is the Hamming distance for this Sample Input :**
+
+s1 = "AGAAACAGACCGCTATGTTCAACGATTTGTTTTATCTCGTCACCGGGATATTGCGGCCACTCATCGGTCAGTTGATTACGCAGGGCGTAAATCGCCAGAATCAGGC"
+s2 = "AGAAACCCACCGCTAAAAACAACGATTTGCGTAGTCAGGTCACCGGGATATTGCGGCCACTAAGGCCTTGGATGATTACGCAGAACGTATTGACCCAGAATCAGGC"
+HammingDistance(s1, s2)
+
+### **Step3: Implement Frequent Words with Mismatches Function:**
+
+def HammingDistance(string1, string2):
+    if len(string1) != len(string2):                         # Checks if the lengths of the two input strings are equal
+        print("Strings must be the same length!")
+
+    number_mismatches = 0                                    # will be used to count the number of mismatched characters between the strings
+    string_length = len(string1)                             # This is used to control the loop that iterates through the characters
+    for i in range(string_length):                           # This loop examines each corresponding character in both strings
+        if string1[i] != string2[i]:                         # checks if the characters at the current index i in both strings are different
+            number_mismatches += 1                           # if so, increments the 'number_mismatches' count by 1
+
+    return number_mismatches
+
+#----------------------------------------------------------
+
+def GenerateMismatchedKmers(kmer, h_dist):
+    mismatched_list = []                                        # creates an empty list to store the generated k-mers
+    if h_dist == 0:                                             # checks if the Hamming Distance is 0
+        return [kmer]
+    elif len(kmer) == 1:                                        # checks if the k-mer has a length of 1
+        return ["A", "C", "G", "T"]                             # if so, returns a list of all possible single-nucleotide k-mers ("A", "C", "G", "T"), as any single nucleotide is a mismatch within a distance of 1
+
+    for neighbor in GenerateMismatchedKmers(kmer[1:], h_dist):            # This generates potential mismatches for the remaining part of the k-mer
+        if HammingDistance(kmer[1:], neighbor) < h_dist:                  # Checks if the Hamming distance between the reduced k-mer (kmer[1:]) and the current neighbor is less than h_dist
+            mismatched_list += ["A" + neighbor, "C" + neighbor, "G" + neighbor, "T" + neighbor]   # If so, there's room for more mismatches: Adds four new k-mers to mismatched_list, each starting with a different nucleotide ("A", "C", "G", "T") and followed by the current neighbor
+        else:
+            mismatched_list += [kmer[0] + neighbor]            # If the Hamming distance is already at the maximum allowed h_dist, only the original first base of the k-mer can be used: Adds a new k-mer starting with the original first base (kmer[0]) and followed by the current neighbor
+
+    return mismatched_list
+
+#----------------------------------------------------------
+
+def FindFrequentMismatchWords(Text, k, d):
+    kmerDictionary = {}                                           # creates an empty dictionary to store k-mer and their frequencies
+    for start in range(len(Text) - k + 1):                        # 'len(Text) - k + 1' is to ensure the loop considers all k-mers
+        kmer = Text[start : start + k]                            # extract the current k-mer from the text using string slicing
+        mismatched_kmers = GenerateMismatchedKmers(kmer, d)       # define a function to create variation of the current k-mer with up to 'd' mismatches and stores the generated mismatched k-mer in the list
+        for km in mismatched_kmers:
+            if km in kmerDictionary:                              # check if the k-mer is already in the dict or not
+                kmerDictionary[km] += 1                           # if its already exist -> add 1 to count
+            else:
+                kmerDictionary[km] = 1                            # if its not -> adds it with a count of 1
+    maxCount = max(kmerDictionary.values())                       # finds the maximum count of any k-mer in the dictionary
+    frequent_kmers = []                                           # creates an empty list to store the most frequent k-mer
+    for kmer, count in kmerDictionary.items():
+        if count == maxCount:                                     # if the count of a k-mer is equal to the maximum count
+            frequent_kmers.append(kmer)                           # appends it to the 'frequent_kmers' list
+
+    return frequent_kmers
+
+
+
+**3.1 What is the Frequent Words with Mismatches for this Sample Input:**
+
+#Q 3.1
+#d = 1
+#k = 4
+
+text = "ACGTTGCATGTCGCATGATGCATGAGAGCT"
+k = 4
+d = 1
+FindFrequentMismatchWords(text, k, d)
+
+
+
+---
+
+
+
+
+### **Step 1: Generate the k-mer Composition of a String**
+
+def de_bruijn_graph_from_string(k, text):
+    # Create a dictionary to store the adjacency list
+    adjacency_list = {}
+
+    # Iterate through all k-mers in the text
+    for i in range(len(text) - k + 1):
+        kmer = text[i:i+k]
+        prefix = kmer[:-1]
+        suffix = kmer[1:]
+
+        # Add the k-1 mer to the adjacency list
+        if prefix in adjacency_list:
+            adjacency_list[prefix].append(suffix)
+        else:
+            adjacency_list[prefix] = [suffix]
+
+    return adjacency_list
+
+
+
+**1.1 What is the list of composition that generated from sequences 1 with 9_mers?**
+
+k = 9
+seq1 = "ACCCCGAAATATGAACTAGAGCG"
+result = de_bruijn_graph_from_string(k, seq1)
+
+# Print the adjacency list
+" ".join(result)
+
+**1.2 What is the list of composition that generated from sequences 2 with 5-mers?**
+
+k = 5
+seq2 = "CCTGATTCGGC"
+result = de_bruijn_graph_from_string(k, seq2)
+
+# Print the adjacency list
+" ".join(result)
+
+### **Step 2: Generate Prefix and Suffix of k-mers**
+
+**2.1 What are the Prefix that generated from the sequences 2 ?**
+
+s2 = "CCTGATTCGGC"
+prefix_s2 = s2[:-1]
+print(prefix_s2)
+
+**2.2 What are the Suffix that generated from the sequences 2 ?**
+
+suffix_s2 = s2[1:]
+print(suffix_s2)
+
+### **Step 3: Reconstruct a string from its Genome Path**
+
+def StringRecon(kmers):
+    "Generates a string from genome path of kmers k - 1, kmers must be given in a list"
+    # get length of string to generate
+    text = [kmers[0]]
+    # iterate through items in kmer list
+    for i in kmers[1:]:
+        # iterate through each base in kmer
+        text.append(i[-1])
+
+    # convert list to string
+    joined = ''.join(text)
+
+    return joined
+
+**3.1 What is the result of reconstructing a string generated from a list of these ordered k-mers =['ACCGA', 'CCGAA', 'CGAAG', 'GAAGC', 'AAGCT'] ?**
+
+kmers1 =['ACCGA', 'CCGAA', 'CGAAG', 'GAAGC', 'AAGCT']
+StringRecon(kmers1)
+
+**3.2 What is the result of reconstruct string that generated from list of these ordered k-mers= ['ACA', 'CAC', 'ACG', 'CGA', 'GAT'] ?**
+
+kmers2 = ['ACA', 'CAC', 'ACG', 'CGA', 'GAT']
+StringRecon(kmers2)
+
+### **Step 4: Construct the Overlap Graph of a Collection of Kmers**
+
+def GeneratePrefix(kmers):
+    "Generates the k-1 prefix and suffix of kmers"
+    prefixes = {}
+    for kmer in kmers:
+        prefix = kmer[:-1]
+        prefixes[kmer] = prefix
+
+    return prefixes
+
+#----------------------------------------------------------
+
+def GenerateSuffix(kmers):
+    "Generates the k-1 prefix and suffix of kmers"
+    suffixes = {}
+    for kmer in kmers:
+        suffix = kmer[1:]
+        suffixes[kmer] = suffix
+
+    return suffixes
+
+#----------------------------------------------------------
+
+def OverlapGraph(kmers):
+    """Forms the overlap graph of a collection of patterns."""
+    prefix_dict = GeneratePrefix(kmers)
+    suffixes_dict = GenerateSuffix(kmers)
+
+    matches = []
+
+    for key_p, value_p in prefix_dict.items():
+
+        # check if value of prefixes equals value of suffixes
+        for key_s, value_s in suffixes_dict.items():
+             if value_p == value_s:
+                match_pair = (key_s, key_p)
+                matches.append(match_pair)
+
+
+    formatted_data = []
+
+    for pair in matches:
+        formatted_data.append(f"{pair[0]} -> {pair[1]}")
+
+    joined_data = ', '.join(formatted_data)
+
+    return joined_data
+
+
+
+**4.1 What is the result of constructing the Overlap Graph of a collection of K-mers= ['CCTGA', 'CTGAT', 'TGATT', 'GATTC', 'ATTCG', 'TTCGG', 'TCGGC']?**
+
+k = ['CCTGA', 'CTGAT', 'TGATT', 'GATTC', 'ATTCG', 'TTCGG', 'TCGGC']
+OverlapGraph(k)
+
+### **Step 5: Construct the De Bruijn Graph of a String**
+
+def de_bruijn_graph_from_string(k, text):
+    # Create a dictionary to store the adjacency list
+    adjacency_list = {}
+
+    # Iterate through all k-mers in the text
+    for i in range(len(text) - k + 1):
+        kmer = text[i:i+k]
+        prefix = kmer[:-1]
+        suffix = kmer[1:]
+
+        # Add the k-1 mer to the adjacency list
+        if prefix in adjacency_list:
+            adjacency_list[prefix].append(suffix)
+        else:
+            adjacency_list[prefix] = [suffix]
+
+
+    return adjacency_list
+
+**5.1 What is the result of constructing a De Bruijn Graph from Sequence 1 with k=4?**
+
+#seq1
+result1 = de_bruijn_graph_from_string(4, seq1)
+
+# Print the adjacency list
+for node, neighbors in result1.items():
+    print(node + " ->", " ".join(neighbors))
+
+#ACC-> CCC, CCC-> CCC,CCG, CCG-> CGA, CGA-> GAA, GAA-> AAA,AAC, AAA-> AAT, AAT-> ATA, ATA-> TAT, TAT-> ATG, ATG-> TGA, TGA-> GAA, AAC-> ACT, ACT-> CTA, CTA-> TAG, TAG-> AGA, AGA-> GAG, GAG-> AGC, AGC-> GCG
+
+**5.2 What is the result of constructing a De Bruijn Graph from Sequence 2 with k=4?**
+
+#seq2
+result2 = de_bruijn_graph_from_string(4, seq2)
+
+# Print the adjacency list
+for node, neighbors in result2.items():
+    print(node + "->", " ".join(neighbors))
+
+CCT-> CTG, CTG-> TGA, TGA-> GAT, GAT-> ATT, ATT-> TTC, TTC-> TCG, TCG-> CGG, CGG-> GGC
+
+### **Salmonella**
+
+def hamming_distance(str1, str2):
+    return sum(c1 != c2 for c1, c2 in zip(str1, str2))
+
+def find_dna_a_box(text, pattern, d):
+    positions = []
+    pattern_length = len(pattern)
+
+    for i in range(len(text) - pattern_length + 1):
+        substring = text[i:i+pattern_length]
+        if hamming_distance(substring, pattern) <= d:
+            positions.append(i)
+
+    return positions
+
+# Load Salmonella
+with open("Salmonella_enterica.txt", "r") as file:
+    salmonella_genome = "".join(line.strip() for line in file.readlines()[1:])
+
+# Find starting positions
+pattern = "TTATCCACA"
+max_mismatches = 1
+occurrences = find_dna_a_box(salmonella_genome, pattern, max_mismatches)
+
+print(" ".join(map(str, occurrences[:10])))
+
+
+f = open("Salmonella_enterica.txt", "r")      # f just an object that have the file
+
+def MinimizeSkew(genome):
+  skew_value = 0                              # This variable will store the current skew value at each position in the genome
+  min_skew_value = 0                          # This variable will store the minimum skew value encountered so far
+  skew_position = []                          # Initializes an empty list to store the positions in the genome where the minimum skew value is found
+  for i, base in enumerate(genome, 1):        # i: represents the current base (starting from 1) - base: This variable stores the current base character
+    if base.upper() == "G":                   # Checks if the current base (converted to uppercase) is equal to "G"
+      skew_value = skew_value + 1             # If so, increments the skew_value by 1, as G contributes +1 to the skew
+    elif base.upper() == "C":                 # Checks if the current base (converted to uppercase) is equal to "C"
+      skew_value = skew_value - 1             # If so, decrements the skew_value by 1, as C contributes -1 to the skew
+      if skew_value == min_skew_value:        # Checks if the current skew value is equal to the current minimum skew value
+        skew_position.append(i)               # If so, appends the current position i to the skew_position list
+      elif skew_value < min_skew_value:       # Checks if the current skew_value is less than the current minimum min_skew_value
+         min_skew_value = skew_value          # If so, updates the min_skew_value to the current skew_value, as a new minimum has been found
+         skew_position = [i]                  # Clears the skew_position list and adds the current position since it's the first occurrence of the new minimum
+  return skew_position
+MinimizeSkew(f.read())                                # read the overall file)
+
+def HammingDistance(string1, string2):
+    if len(string1) != len(string2):                         # Checks if the lengths of the two input strings are equal
+        print("Strings must be the same length!")
+
+    number_mismatches = 0                                    # will be used to count the number of mismatched characters between the strings
+    string_length = len(string1)                             # This is used to control the loop that iterates through the characters
+    for i in range(string_length):                           # This loop examines each corresponding character in both strings
+        if string1[i] != string2[i]:                         # checks if the characters at the current index i in both strings are different
+            number_mismatches += 1                           # if so, increments the 'number_mismatches' count by 1
+
+    return number_mismatches
+
+def FindFrequentMismatchWords(Text, k, d):
+    kmerDictionary = {}                                           # creates an empty dictionary to store k-mer and their frequencies
+    for start in range(len(Text) - k + 1):                        # 'len(Text) - k + 1' is to ensure the loop considers all k-mers
+        kmer = Text[start : start + k]                            # extract the current k-mer from the text using string slicing
+        mismatched_kmers = GenerateMismatchedKmers(kmer, d)       # define a function to create variation of the current k-mer with up to 'd' mismatches and stores the generated mismatched k-mer in the list
+        for km in mismatched_kmers:
+            if km in kmerDictionary:                              # check if the k-mer is already in the dict or not
+                kmerDictionary[km] += 1                           # if its already exist -> add 1 to count
+            else:
+                kmerDictionary[km] = 1                            # if its not -> adds it with a count of 1
+    maxCount = max(kmerDictionary.values())                       # finds the maximum count of any k-mer in the dictionary
+    frequent_kmers = []                                           # creates an empty list to store the most frequent k-mer
+    for kmer, count in kmerDictionary.items():
+        if count == maxCount:                                     # if the count of a k-mer is equal to the maximum count
+            frequent_kmers.append(kmer)                           # appends it to the 'frequent_kmers' list
+
+    return frequent_kmers
